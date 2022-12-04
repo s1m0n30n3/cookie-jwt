@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -18,54 +17,8 @@ const key = "some strings to identify my key"
 
 func main() {
 	http.HandleFunc("/", serveHtml)
-	http.HandleFunc("/submit", submitInfo)
+	http.HandleFunc("/submit", submit)
 	http.ListenAndServe(":8080", nil)
-}
-
-func getJWT(email string) (string, error) {
-
-	userClaims := claims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),
-		},
-		Email: email,
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &userClaims)
-
-	signedString, err := token.SignedString([]byte(key))
-	if err != nil {
-		return "", fmt.Errorf("couldn't Sign String: %w", err)
-	}
-
-	return signedString, nil
-}
-
-func submitInfo(response http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPost {
-		http.Redirect(response, request, "/", http.StatusSeeOther)
-		return
-	}
-
-	email := request.FormValue("email")
-	if email == "" {
-		http.Redirect(response, request, "/", http.StatusSeeOther)
-		return
-	}
-
-	signedString, err := getJWT(email)
-	if err != nil {
-		http.Error(response, "couldn't get JWT", http.StatusInternalServerError)
-		return
-	}
-
-	cookie := http.Cookie{
-		Name:  "session",
-		Value: signedString,
-	}
-
-	http.SetCookie(response, &cookie)
-	http.Redirect(response, request, "/", http.StatusSeeOther)
 }
 
 func serveHtml(response http.ResponseWriter, request *http.Request) {
