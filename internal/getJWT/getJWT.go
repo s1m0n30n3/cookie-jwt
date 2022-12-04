@@ -14,7 +14,7 @@ type claims struct {
 
 const key = "some strings to identify my key"
 
-func main(email string) (string, error) {
+func getJWT(email string) (string, error) {
 
 	userClaims := claims{
 		StandardClaims: jwt.StandardClaims{

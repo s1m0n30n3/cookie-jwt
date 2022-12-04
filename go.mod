@@ -1,4 +1,4 @@
-module github.com/s1m0n30n3/store-cookie-value-go
+module github.com/s1m0n30n3/cookie-jwt
 
 go 1.19
 

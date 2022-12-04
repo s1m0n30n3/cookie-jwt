@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func main(response http.ResponseWriter, request *http.Request) {
+func submit(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		http.Redirect(response, request, "/", http.StatusSeeOther)
 		return
