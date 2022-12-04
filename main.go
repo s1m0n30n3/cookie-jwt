@@ -9,25 +9,26 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+type claims struct {
+	Email string
+	jwt.StandardClaims
+}
+
+const key = "some strings to identify my key"
+
 func main() {
 	http.HandleFunc("/", serveHtml)
 	http.HandleFunc("/submit", submitInfo)
 	http.ListenAndServe(":8080", nil)
 }
 
-func getJWT(message string) (string, error) {
-	key := "some strings"
-
-	type claims struct {
-		jwt.StandardClaims
-		Email string
-	}
+func getJWT(email string) (string, error) {
 
 	userClaims := claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),
 		},
-		Email: message,
+		Email: email,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &userClaims)
@@ -73,11 +74,24 @@ func serveHtml(response http.ResponseWriter, request *http.Request) {
 		cookie = &http.Cookie{}
 	}
 
-	isEqual := true
+	signedString := cookie.Value
+	afterVerificationToken, err := jwt.ParseWithClaims(
+		signedString,
+		&claims{},
+		func(beforeVerificationToken *jwt.Token) (interface{}, error) {
+			return []byte(key), nil
+		},
+	)
+
+	isEqual := afterVerificationToken.Valid && err == nil
 
 	message := "Not logged in"
 	if isEqual {
 		message = "Logged in"
+		userClaims := afterVerificationToken.Claims.(*claims)
+		fmt.Println(userClaims.Email)
+		fmt.Println(userClaims.StandardClaims.ExpiresAt)
+		fmt.Println(userClaims.ExpiresAt)
 	}
 
 	html := `
