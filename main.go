@@ -79,11 +79,14 @@ func serveHtml(response http.ResponseWriter, request *http.Request) {
 		signedString,
 		&claims{},
 		func(beforeVerificationToken *jwt.Token) (interface{}, error) {
+			if beforeVerificationToken.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+				return nil, fmt.Errorf("Someone tried to hack changed signing method")
+			}
 			return []byte(key), nil
 		},
 	)
 
-	isEqual := afterVerificationToken.Valid && err == nil
+	isEqual := err == nil && afterVerificationToken.Valid
 
 	message := "Not logged in"
 	if isEqual {
